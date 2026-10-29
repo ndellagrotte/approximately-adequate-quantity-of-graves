@@ -48,7 +48,6 @@ public class AAQGNetwork {
     public static void setup()
     {
         //register packets here
-        registerPacketServer(PacketProbeFiles.class);
         registerPacketClient(GraveRenderTogglePacket.class);
         registerPacketClient(GravePosTogglePacket.class);
     }

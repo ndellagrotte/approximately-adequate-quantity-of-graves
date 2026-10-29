@@ -9,13 +9,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.ndellagrotte.aaqg.api.TempInventory;
-import com.ndellagrotte.aaqg.blocks.ModBlocks;
 import com.ndellagrotte.aaqg.items.ItemDeathList;
 
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.InventoryHelper;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -130,9 +128,7 @@ public class InventoryHolder {
     }
 
     public static boolean isItemValidForGrave(ItemStack stack) {
-        if (stack.isEmpty()
-                || stack.getItem() instanceof ItemDeathList
-                || stack.getItem() == Item.getItemFromBlock(ModBlocks.blockGrave)) {
+        if (stack.isEmpty() || stack.getItem() instanceof ItemDeathList) {
             return false;
         }
         return true;

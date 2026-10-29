@@ -99,7 +99,7 @@ public class CommonEvents {
 		}
 
 		for (EntityItem entityItem : e.getDrops()) {
-			if (entityItem.getItem().getItem() == Item.getItemFromBlock(ModBlocks.blockGrave) || entityItem.getItem().getItem() == ModItems.itemDeathList) {
+			if (entityItem.getItem().getItem() == ModItems.itemDeathList) {
 				entityItem.setDead();
 			}
 		}
@@ -249,7 +249,7 @@ public class CommonEvents {
 	@SubscribeEvent(priority = EventPriority.HIGH)
 	public void itemToss(ItemTossEvent event) {
 		Item item = event.getEntityItem().getItem().getItem();
-		if (item == Item.getItemFromBlock(ModBlocks.blockGrave) || item == ModItems.itemDeathList) {
+		if (item == ModItems.itemDeathList) {
 			event.setCanceled(true);
 		}
 	}

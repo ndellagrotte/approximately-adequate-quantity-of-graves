@@ -1,7 +1,5 @@
 package com.ndellagrotte.aaqg.proxy;
 
-import java.util.List;
-
 import org.lwjgl.util.vector.Vector3f;
 
 import com.ndellagrotte.aaqg.ModConfigs;
@@ -10,12 +8,10 @@ import com.ndellagrotte.aaqg.blocks.ModBlocks;
 import com.ndellagrotte.aaqg.events.CommonEvents;
 import com.ndellagrotte.aaqg.friends.FriendHandler;
 import com.ndellagrotte.aaqg.gui.ModGuiHandler;
-import com.ndellagrotte.aaqg.invman.DeathInventoryHandler;
 import com.ndellagrotte.aaqg.items.ModItems;
 import com.ndellagrotte.aaqg.network.AAQGNetwork;
 import com.ndellagrotte.aaqg.tiles.ModTiles;
 
-import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -45,12 +41,6 @@ public class CommonProxy {
     public void postinit(FMLPostInitializationEvent e)
     {
 
-    }
-
-    public List<String> probeForFiles(BlockPos pos)
-    {
-//        LogHelper.info("Probing for files in Common!");
-        return DeathInventoryHandler.getSavedInventories();
     }
 
     public void particleStream(Vector3f start, Vector3f end)

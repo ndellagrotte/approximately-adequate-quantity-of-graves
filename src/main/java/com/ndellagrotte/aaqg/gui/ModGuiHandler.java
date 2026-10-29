@@ -15,11 +15,6 @@ public class ModGuiHandler implements IGuiHandler{
 
     @Override
     public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
-//        if (ID == DEATH_INVENTORIES)
-//        {
-////            LogHelper.info("creating new container");
-//            return new ContainerInventoryFileManager(player);
-//        }
         return null;
     }
 
