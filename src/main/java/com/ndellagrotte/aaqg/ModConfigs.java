@@ -188,7 +188,7 @@ public class ModConfigs {
                 "whenever a grave is (un)locked, the player will receive a chat message letting them know " +
                 "the current state of the grave. (Defaults to true.)").getBoolean();
 
-        REQUIRE_SNEAKING = config.get("GravePlayerInteractions", "requireSneaking", true, "When true, players " +
+        REQUIRE_SNEAKING = config.get("GravePlayerInteraction", "requireSneaking", true, "When true, players " +
                 "will be required to sneak while colliding with their grave to obtain their items. When false, " +
                 "just colliding with the grave is enough to get the items back. (Defaults to true).").getBoolean();
     }
@@ -228,7 +228,7 @@ public class ModConfigs {
         REPLACE_FLOWING_WATER = config.get("GravePlacement", "replaceFlowingWater", true, "If true, graves will " +
                 "be able to replace FLOWING water when created. (Defaults to true).").getBoolean();
 
-        REPLACE_STILL_WATER = config.get("GravePlacement", "replaceStillLava", true, "If true, graves will " +
+        REPLACE_STILL_WATER = config.get("GravePlacement", "replaceStillWater", true, "If true, graves will " +
                 "be able to replace STILL water when created. (Defaults to true).").getBoolean();
 
         REPLACE_PLANTS = config.get("GravePlacement", "replacePlants", true, "If true, graves will " +
