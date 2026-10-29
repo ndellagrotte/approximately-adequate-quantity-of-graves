@@ -13,7 +13,6 @@ import com.ndellagrotte.aaqg.events.ClientEvents;
 import com.ndellagrotte.aaqg.events.RenderEvents;
 
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ItemModelMesher;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -27,6 +26,7 @@ public class ClientProxy extends CommonProxy{
     @Override
     public void preinit(FMLPreInitializationEvent e) {
         super.preinit(e);
+        ItemRenderRegister.registerModels();
     }
 
     @Override
@@ -34,10 +34,6 @@ public class ClientProxy extends CommonProxy{
         super.init(e);
 
         ModRenders.init();
-//        ItemRenderRegister.registerItemRenderers();
-        ItemModelMesher mesher = Minecraft.getMinecraft().getRenderItem().getItemModelMesher();
-
-        ItemRenderRegister.initClient(mesher);
 
         NEAR = ModConfigs.NEAR_PARTICLE;
         FAR = ModConfigs.FAR_PARTICLE;
