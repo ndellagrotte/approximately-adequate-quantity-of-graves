@@ -68,6 +68,14 @@ dependencies {
     } else {
         runtimeOnly 'mezz:jei:4.36.1:dev'
     }
+
+    // Optional inventory integrations. Each is gated at runtime by Loader.isModLoaded, so
+    // these are compile-only. Cleanroom remaps SRG release jars at runtime.
+    compileOnly 'curse.maven:baubles-227083:2518667'                 // Baubles 1.5.2
+    compileOnly 'curse.maven:cosmetic-armor-reworked-237307:2937869' // Cosmetic Armor Reworked v5a
+    compileOnly 'curse.maven:techguns-244201:2958103'                // Techguns 2.0.2.0_pre3.2
+    compileOnly 'curse.maven:galacticraft-legacy-564236:6364107'     // Galacticraft Legacy 4.0.7 (modid galacticraftcore)
+    compileOnly 'curse.maven:forge-backpacks-59143:2554237'          // Backpacks! by Eydamos 3.0.2 (modid backpack)
 }
 
 cleanroom {
