@@ -69,9 +69,9 @@ public class CommonEvents {
 		}
 		if (!player.world.getGameRules().getBoolean("keepInventory")) {
 			InventoryHolder inventoryHolder = invs.get(player.getUniqueID());
-			inventoryHolder.ensure(e.getDrops());
-			if(!inventoryHolder.isInventoryEmpty())handleGraveLogic(player);
 			if(inventoryHolder != null){
+				inventoryHolder.ensure(e.getDrops());
+				if(!inventoryHolder.isInventoryEmpty())handleGraveLogic(player);
 				List<EntityItem> removals = new ArrayList<EntityItem>();
 				List<ItemStack> dropList = inventoryHolder.getAllItems();
 				for(EntityItem itm : e.getDrops()){
