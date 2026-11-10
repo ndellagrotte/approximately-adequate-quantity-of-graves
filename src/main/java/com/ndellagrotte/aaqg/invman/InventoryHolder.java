@@ -65,36 +65,59 @@ public class InventoryHolder {
         setTimestamp(new SimpleDateFormat("MM_dd_YYYY_HH_mm_ss").format(new Date()));
     }
     
-    public List<ItemStack> getAllItems(){
-    	List<ItemStack> list = new ArrayList<>();
-    	for(String key : compound.getKeySet()){
-    		TempInventory inv = new TempInventory(compound.getTagList(key, 10));
-    		list.addAll(inv.getListOfNonEmptyItemStacks());
-    	}
-    	return list;
+    /**
+     * The ids of the inventories stored in this holder. The compound also holds plain values (player name, timestamp,
+     * position); only tag lists are inventories.
+     */
+    private List<String> inventoryKeys() {
+        List<String> keys = new ArrayList<>();
+        for (String key : compound.getKeySet()) {
+            if (compound.hasKey(key, 9)) {
+                keys.add(key);
+            }
+        }
+        return keys;
     }
-    
-    public void ensure(List<EntityItem> drops){
-    	for(String key : compound.getKeySet()){
-    		TempInventory inv = new TempInventory(compound.getTagList(key, 10));
-    		for(int i = 0; i < inv.getSizeInventory(); i++){
-    			boolean contains = false;
-    			for(EntityItem itm : drops){
-    				if(ItemStack.areItemStacksEqual(inv.getStackInSlot(i), itm.getItem())){
-    					contains = true;
-    					drops.remove(itm);
-    					break;
-    				}
-    			}
-    			if(!contains){
-    				inv.setInventorySlotContents(i, ItemStack.EMPTY);
-    			}
-    		}
-    		NBTTagList list = new NBTTagList();
-    		inv.writeToTagList(list);
-    		compound.setTag(key, list);
-    	}
-    	isEmpty = getAllItems().isEmpty();
+
+    public List<ItemStack> getAllItems() {
+        List<ItemStack> list = new ArrayList<>();
+        for (String key : inventoryKeys()) {
+            TempInventory inv = new TempInventory(compound.getTagList(key, 10));
+            list.addAll(inv.getListOfNonEmptyItemStacks());
+        }
+        return list;
+    }
+
+    /**
+     * Reconciles this holder with what the player actually dropped: a slot whose stack is not among the drops is
+     * emptied, and every drop that is accounted for is removed from the drops.
+     *
+     * @return the drops this holder now accounts for, so they can be put back if nothing ends up holding the items
+     */
+    public List<EntityItem> ensure(List<EntityItem> drops) {
+        List<EntityItem> claimed = new ArrayList<>();
+        for (String key : inventoryKeys()) {
+            TempInventory inv = new TempInventory(compound.getTagList(key, 10));
+            for (int i = 0; i < inv.getSizeInventory(); i++) {
+                boolean contains = false;
+                for (EntityItem itm : drops) {
+                    if (ItemStack.areItemStacksEqual(inv.getStackInSlot(i), itm.getItem())) {
+                        contains = true;
+                        claimed.add(itm);
+                        drops.remove(itm);
+                        break;
+                    }
+                }
+                if (!contains) {
+                    inv.setInventorySlotContents(i, ItemStack.EMPTY);
+                }
+            }
+            NBTTagList list = new NBTTagList();
+            inv.writeToTagList(list);
+            compound.setTag(key, list);
+        }
+        isEmpty = getAllItems().isEmpty();
+        return claimed;
     }
 
     /**
@@ -106,11 +129,7 @@ public class InventoryHolder {
      */
     public NBTTagCompound extractMatching(Predicate<ItemStack> matcher, List<EntityItem> drops, Consumer<ItemStack> onExtract) {
         NBTTagCompound extracted = new NBTTagCompound();
-        for (String key : new ArrayList<>(compound.getKeySet())) {
-            // the compound also holds plain values (player name, timestamp, position); only tag lists are inventories
-            if (!compound.hasKey(key, 9)) {
-                continue;
-            }
+        for (String key : inventoryKeys()) {
             TempInventory inv = new TempInventory(compound.getTagList(key, 10));
             TempInventory extractedInv = new TempInventory(inv.getSizeInventory());
             boolean extractedAny = false;
@@ -182,6 +201,15 @@ public class InventoryHolder {
         return true;
     }
 
+    /**
+     * Whether a holder's stored compound (the tag under {@link #TAG_NAME}) records a grave position. It does not when
+     * no grave formed for that death.
+     */
+    public static boolean hasPosition(NBTTagCompound holderCompound) {
+        // 99 matches any numeric tag
+        return holderCompound.hasKey(X, 99) && holderCompound.hasKey(Y, 99) && holderCompound.hasKey(Z, 99);
+    }
+
     public NBTTagCompound writeToNBT(NBTTagCompound inCompound) {
         inCompound.setTag(TAG_NAME, this.compound);
         inCompound.setBoolean(EMPTY, this.isEmpty);
@@ -193,9 +221,12 @@ public class InventoryHolder {
             this.compound = inCompound.getCompoundTag(TAG_NAME);
             this.isEmpty = inCompound.getBoolean(EMPTY);
 
-            this.xcoord = compound.getInteger(X);
-            this.ycoord = compound.getInteger(Y);
-            this.zcoord = compound.getInteger(Z);
+            // the position is only stored once a grave is placed; a missing number reads as 0, which would
+            // look like a grave at 0,0,0
+            boolean hasPosition = hasPosition(compound);
+            this.xcoord = hasPosition ? compound.getInteger(X) : - 1;
+            this.ycoord = hasPosition ? compound.getInteger(Y) : - 1;
+            this.zcoord = hasPosition ? compound.getInteger(Z) : - 1;
 
             this.timestamp = compound.getString(TIMESTAMP);
             this.playerName = compound.getString(PLAYER_NAME);

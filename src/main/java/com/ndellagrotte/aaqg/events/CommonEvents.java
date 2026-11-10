@@ -1,6 +1,5 @@
 package com.ndellagrotte.aaqg.events;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -74,20 +73,12 @@ public class CommonEvents {
 			if(inventoryHolder != null){
 				// soulbound items come out of the drops first, so they never reach the grave
 				SoulboundHandler.keepSoulboundItems(player, inventoryHolder, e.getDrops());
-				inventoryHolder.ensure(e.getDrops());
-				if(!inventoryHolder.isInventoryEmpty())handleGraveLogic(player);
-				List<EntityItem> removals = new ArrayList<EntityItem>();
-				List<ItemStack> dropList = inventoryHolder.getAllItems();
-				for(EntityItem itm : e.getDrops()){
-					for(ItemStack is : dropList){
-						if(ItemStack.areItemStacksEqual(itm.getItem(), is)){
-							dropList.remove(is);
-							removals.add(itm);
-							break;
-						}
-					}
+				// takes the drops the snapshot accounts for out of the event, so they do not also fall on the ground
+				List<EntityItem> claimed = inventoryHolder.ensure(e.getDrops());
+				if (!inventoryHolder.isInventoryEmpty() && !handleGraveLogic(player)) {
+					// nothing took the items (graves disabled, or no spot for one): let them drop like a normal death
+					e.getDrops().addAll(claimed);
 				}
-				for(EntityItem removal : removals)e.getDrops().remove(removal);
 			}
 		}
 
@@ -114,13 +105,20 @@ public class CommonEvents {
 		LogHelper.info(player.getName() + " died in dimension " + player.dimension + " at " + pos.toString() + "." + (ModConfigs.ENABLE_GRAVES ? " Their grave may be near!" : ""));
 	}
 
-	private void handleGraveLogic(EntityPlayer player) {
+	/**
+	 * Tries to put the player's snapshot into a grave, and writes the inventory save file either way.
+	 *
+	 * @return true if a grave now holds the items. On false the caller must leave them to drop, because nothing else
+	 *         has them: the dead player's inventory is not carried over to the respawned player.
+	 */
+	private boolean handleGraveLogic(EntityPlayer player) {
 		if (ModConfigs.ENABLE_CHAT_MESSAGE_ON_DEATH) {
 			ChatHelper.sayMessage(player, "Place of death: " + player.getPosition().toString());
 		}
 		InventoryHolder inventoryHolder = invs.get(player.getUniqueID());
-		if(inventoryHolder == null)return;
-		
+		if(inventoryHolder == null)return false;
+
+		boolean inGrave = false;
 		if (ModConfigs.ENABLE_GRAVES) {
 			// generate the grave
 			IBlockState state = ModBlocks.blockGrave.getDefaultState();
@@ -134,10 +132,6 @@ public class CommonEvents {
 
 			if (posToPlace.getY() == -1) {
 				ChatHelper.sayMessage(player, "A suitable location for the grave wasn't found.");
-
-				// we need to give them their items back in this case so they
-				// can be dropped like normal
-				inventoryHolder.insertInventory(player);
 			} else {
 				player.world.setBlockState(posToPlace, state);
 				TileEntity tile = player.world.getTileEntity(posToPlace);
@@ -156,16 +150,12 @@ public class CommonEvents {
 					grave.setCamoState(camoBlock);
 					inventoryHolder.setPosition(posToPlace);
 					grave.setSavedInventory(inventoryHolder);
-
+					inGrave = true;
 				} else {
 					LogHelper.info("Error! Grave could not be found after placement! " + posToPlace.toString());
 					ChatHelper.sayMessage(player, "ERROR! Grave formed incorrectly! Please report this to the AAQG issue tracker.");
 				}
 			}
-		} else {
-			// if graves aren't allowed, we need to give the player their items
-			// back
-			inventoryHolder.insertInventory(player);
 		}
 
 		if (ModConfigs.ALLOW_INVENTORY_SAVES) {
@@ -174,6 +164,7 @@ public class CommonEvents {
 				LogHelper.error("An error occurred when writing the inventory file for " + inventoryHolder.getPlayerName() + ".");
 			}
 		}
+		return inGrave;
 	}
 
 	private BlockPos findValidGraveLocation(World world, BlockPos pos) {

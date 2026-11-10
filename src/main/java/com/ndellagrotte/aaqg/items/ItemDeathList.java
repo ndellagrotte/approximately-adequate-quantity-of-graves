@@ -93,6 +93,10 @@ public class ItemDeathList extends Item{
 
             if (compound.hasKey(InventoryHolder.TAG_NAME)) {
                 compound = compound.getCompoundTag(InventoryHolder.TAG_NAME);
+                if (!InventoryHolder.hasPosition(compound)) {
+                    // no grave formed for this death, so there is nowhere to point to
+                    return null;
+                }
                 float x = compound.getInteger(InventoryHolder.X) + 0.5f;
                 float y = compound.getInteger(InventoryHolder.Y) + 0.5f;
                 float z = compound.getInteger(InventoryHolder.Z) + 0.5f;
