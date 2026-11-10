@@ -142,6 +142,14 @@ public class TileGrave extends TileEntity {
         return ModConfigs.ALLOW_GRAVE_ROBBING || player.getUniqueID().equals(playerID);
     }
 
+    /**
+     * A strict owner check. Unlike {@link #isSamePlayer}, it ignores the grave robbing config.
+     */
+    public boolean isOwner(UUID id)
+    {
+        return playerID != null && playerID.equals(id);
+    }
+
     @Override
     public void readFromNBT(NBTTagCompound compound) {
         super.readFromNBT(compound);

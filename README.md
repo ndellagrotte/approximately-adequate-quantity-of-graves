@@ -13,6 +13,7 @@ to the CleanroomMC mod template, with a new mod id (`aaqg`). Licensed under GPLv
 - Per-grave lock and force/yield mode (right click and sneak-right-click the grave).
 - Friends list so trusted players can open your graves.
 - Death lists: an item showing what was in the grave, with a particle trail leading to it.
+- Grave glow: your own graves are outlined through walls once you are within 50 blocks (configurable) of them.
 - Soulbound items: a configurable list of items that stay on you through death instead of going into the grave,
   with optional durability and experience penalties.
 - Inventory backups as JSON files under `./aaqg/savedInventories/` for admin restore.
@@ -71,6 +72,27 @@ soulbound {
 ```
 
 Entries that match nothing are listed in an error in the log at startup and ignored.
+
+## Grave glow
+
+A grave is camouflaged as the ground under it, so its owner gets a pulsing outline around it that shows through
+blocks. Only the owner sees it: friends and the `allowGraveRobbing` option do not change that. These options are in
+the `renderoptions` category of the config and are read by each client from its own file.
+
+| Option | Default | Purpose |
+|---|---|---|
+| `enableGraveGlow` | `true` | Whether your own graves glow at all |
+| `graveGlowRange` | `50` | How close, in blocks, you have to be for the glow to show (1-256) |
+| `graveGlowColor` | `0xFFD54A` | The color of the glow |
+
+Things to know:
+
+- The glow is a convenience, not a secret. Each client decides whether to draw it, and the server already tells
+  every client who owns a grave, so a modified client could highlight other players' graves.
+- It can only show for graves in chunks your client has loaded. With a very low render distance it appears later
+  than `graveGlowRange`, and it never shows for a grave in another dimension.
+- Shader packs may tint or hide it.
+- `/aaqg_toggle_render` hides the glow along with the grave.
 
 ## Building
 

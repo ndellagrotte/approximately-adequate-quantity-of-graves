@@ -2,6 +2,7 @@ package com.ndellagrotte.aaqg.events;
 
 import com.ndellagrotte.aaqg.Names;
 import com.ndellagrotte.aaqg.client.fx.ParticleRenderDispatcher;
+import com.ndellagrotte.aaqg.client.render.GraveGlowRenderer;
 import com.ndellagrotte.aaqg.client.render.models.AdaptiveGraveModel;
 import com.ndellagrotte.aaqg.util.Utility;
 
@@ -15,6 +16,7 @@ import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.model.IModel;
 import net.minecraftforge.client.model.ModelLoaderRegistry;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -57,5 +59,19 @@ public class ClientEvents {
         profiler.startSection("aaqg_particles");
         ParticleRenderDispatcher.dispatch();
         profiler.endSection();
+
+        profiler.startSection("aaqg_glow");
+        GraveGlowRenderer.render(event.getPartialTicks());
+        profiler.endSection();
+    }
+
+    @SubscribeEvent
+    public void onWorldUnload(WorldEvent.Unload event)
+    {
+        // in singleplayer the integrated server's worlds unload through this event too
+        if (event.getWorld().isRemote)
+        {
+            GraveGlowRenderer.clear();
+        }
     }
 }

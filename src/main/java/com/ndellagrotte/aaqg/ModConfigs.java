@@ -21,6 +21,9 @@ public class ModConfigs {
     public static boolean REQUIRE_SNEAK_FOR_PATH;
     public static boolean GRAVE_RENDERING_ENABLED;
     public static boolean GRAVE_POS_ENABLED;
+    public static boolean GRAVE_GLOW_ENABLED;
+    public static int GRAVE_GLOW_RANGE;
+    public static int GRAVE_GLOW_COLOR;
 
     // Common configs
     public static boolean ENABLE_GRAVES;
@@ -152,6 +155,26 @@ public class ModConfigs {
         GRAVE_POS_ENABLED = config.get("renderOptions", "enableGravePositionRender", false, "If set to true, graves " +
                 "will display their block position when looking at them (useful for admins/mods for debugging purposes. " +
                 "There is also a command to temporarily toggle this effect in-game. (Defaults to false.)").getBoolean();
+
+        GRAVE_GLOW_ENABLED = config.get("renderOptions", "enableGraveGlow", true, "If set to true, your own graves " +
+                "are drawn with a glowing outline that can be seen through blocks while you are within " +
+                "'graveGlowRange' blocks of them. Only the owner of a grave sees its glow. (Defaults to " +
+                "true.)").getBoolean();
+
+        GRAVE_GLOW_RANGE = Math.clamp(config.get("renderOptions", "graveGlowRange", 50, "How close (in blocks) you " +
+                "have to be to one of your graves for its glow to show. The glow can only show for graves in chunks " +
+                "your client has loaded, so a low render distance can make it appear later than this. (Defaults " +
+                "to 50, range 1-256.)", 1, 256).getInt(), 1, 256);
+
+        try {
+            GRAVE_GLOW_COLOR = Integer.decode(config.get("renderOptions", "graveGlowColor", "0xFFD54A",
+                    "This is the color of the glow drawn around your own graves. (Defaults to " +
+                            "0xFFD54A.)").getString()) & 0xFFFFFF;
+        }
+        catch (Exception e)
+        {
+            GRAVE_GLOW_COLOR = 0xFFD54A;
+        }
     }
 
     private static void handleColorConfigs()
