@@ -21,14 +21,12 @@ import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
-import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
@@ -239,14 +237,6 @@ public class CommonEvents {
 
 	private IBlockState getBlockStateBelow(World world, BlockPos pos) {
 		return world.getBlockState(pos.add(0, -1, 0));
-	}
-
-	@SubscribeEvent(priority = EventPriority.HIGH)
-	public void itemToss(ItemTossEvent event) {
-		Item item = event.getEntityItem().getItem().getItem();
-		if (item == ModItems.itemDeathList) {
-			event.setCanceled(true);
-		}
 	}
 
 	// @SubscribeEvent(priority = EventPriority.HIGH)

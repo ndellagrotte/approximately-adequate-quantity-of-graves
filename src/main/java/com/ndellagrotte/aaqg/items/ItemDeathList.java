@@ -64,7 +64,6 @@ public class ItemDeathList extends Item{
         if (isShifted) {
             tooltip.add(TextFormatting.GOLD + "Right-click to view a list of everything");
             tooltip.add(TextFormatting.GOLD + "you had on you when you died.");
-            tooltip.add(TextFormatting.RED + "Drop from your inventory to destroy");
         }
         else {
             tooltip.add(TextFormatting.ITALIC + "<Shift for explanation>");
