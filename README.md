@@ -41,25 +41,36 @@ The `soulbound` category of the config controls what a player keeps on death. No
 
 | Option | Default | Purpose |
 |---|---|---|
-| `soulbound` | `aaqg:death_list` | Items that stay in the player's inventory on death, in their original slots |
+| `soulbound` | `aaqg:death_list`, `type:armor`, `type:tool`, `ore:torch` | Items that stay in the player's inventory on death, in their original slots |
 | `soulbound_durability_penalty` | `10` | Percent of its maximum durability each soulbound item loses per death. Never breaks the item: it stops at 1 durability |
 | `soulbound_exp_penalty` | `20` | Percent of experience levels lost on every death. The rest is kept and no orbs drop. `100` is vanilla behaviour |
 
-Each `soulbound` entry is an item id, or an ore dictionary name with an `ore:` prefix (Minecraft 1.12 has no item
-tags, so the ore dictionary fills that role):
+Each `soulbound` entry is one of:
+
+| Entry | Matches |
+|---|---|
+| `type:armor` | Anything worn in an armor slot: armor pieces, elytra, and modded armor |
+| `type:tool` | Anything held and used: pickaxes, axes, shovels, hoes, swords, bows, shields, shears, fishing rods, flint and steel, and modded tools and weapons |
+| `modid:item` | One item by id, such as `minecraft:totem_of_undying` |
+| `ore:name` | Every item under an ore dictionary name, such as `ore:ingotIron` |
+
+Minecraft 1.12 has no item tags, so the two types are worked out from how an item behaves (its class, equipment
+slot, harvest tool classes and attributes) rather than from a list of ids. That is what lets them cover modded
+gear without naming it.
 
 ```
 soulbound {
     S:soulbound <
         aaqg:death_list
-        minecraft:diamond_sword
-        minecraft:elytra
-        ore:ingotIron
+        type:armor
+        type:tool
+        ore:torch
+        minecraft:totem_of_undying
      >
 }
 ```
 
-Entries that match no item or ore dictionary name are listed in an error in the log at startup and ignored.
+Entries that match nothing are listed in an error in the log at startup and ignored.
 
 ## Building
 

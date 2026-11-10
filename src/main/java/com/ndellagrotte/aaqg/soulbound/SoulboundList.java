@@ -1,6 +1,7 @@
 package com.ndellagrotte.aaqg.soulbound;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -14,13 +15,19 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import net.minecraftforge.oredict.OreDictionary;
 
 /**
- * The resolved form of the "soulbound" config list. Each entry is either an item id ("minecraft:diamond_sword") or an
- * ore dictionary name with an "ore:" prefix ("ore:ingotIron"), which is the 1.12 stand-in for item tags.
+ * The resolved form of the "soulbound" config list. Each entry is one of:
+ * <ul>
+ * <li>a kind of item with a "type:" prefix ("type:armor", "type:tool"), see {@link SoulboundType};</li>
+ * <li>an ore dictionary name with an "ore:" prefix ("ore:ingotIron");</li>
+ * <li>an item id ("minecraft:diamond_sword").</li>
+ * </ul>
  */
 public final class SoulboundList {
 
+    public static final String TYPE_PREFIX = "type:";
     public static final String ORE_PREFIX = "ore:";
 
+    private static final Set<SoulboundType> TYPES = EnumSet.noneOf(SoulboundType.class);
     private static final Set<Item> ITEMS = new HashSet<>();
     private static final Set<Integer> ORE_IDS = new HashSet<>();
 
@@ -32,6 +39,7 @@ public final class SoulboundList {
      * registered its items and ore names. Invalid entries are reported in a single error and otherwise ignored.
      */
     public static void resolve(String[] entries) {
+        TYPES.clear();
         ITEMS.clear();
         ORE_IDS.clear();
 
@@ -42,7 +50,14 @@ public final class SoulboundList {
                 continue;
             }
 
-            if (entry.startsWith(ORE_PREFIX)) {
+            if (entry.startsWith(TYPE_PREFIX)) {
+                SoulboundType type = SoulboundType.byConfigName(entry.substring(TYPE_PREFIX.length()));
+                if (type != null) {
+                    TYPES.add(type);
+                } else {
+                    invalid.add("\"" + entry + "\" (unknown type, the types are " + SoulboundType.configNames() + ")");
+                }
+            } else if (entry.startsWith(ORE_PREFIX)) {
                 String oreName = entry.substring(ORE_PREFIX.length());
                 if (!oreName.isEmpty() && OreDictionary.doesOreNameExist(oreName) && !OreDictionary.getOres(oreName, false).isEmpty()) {
                     ORE_IDS.add(OreDictionary.getOreID(oreName));
@@ -61,12 +76,12 @@ public final class SoulboundList {
 
         if (!invalid.isEmpty()) {
             LogHelper.error("Invalid \"soulbound\" entries in aaqg.cfg (ignored): " + String.join(", ", invalid)
-                    + ". Use an item id such as minecraft:diamond_sword, or an ore dictionary name such as ore:ingotIron.");
+                    + ". Use a type such as type:armor, an item id such as minecraft:diamond_sword, or an ore dictionary name such as ore:ingotIron.");
         }
     }
 
     public static boolean isEmpty() {
-        return ITEMS.isEmpty() && ORE_IDS.isEmpty();
+        return TYPES.isEmpty() && ITEMS.isEmpty() && ORE_IDS.isEmpty();
     }
 
     public static boolean matches(ItemStack stack) {
@@ -75,6 +90,11 @@ public final class SoulboundList {
         }
         if (ITEMS.contains(stack.getItem())) {
             return true;
+        }
+        for (SoulboundType type : TYPES) {
+            if (type.matches(stack)) {
+                return true;
+            }
         }
         if (!ORE_IDS.isEmpty()) {
             for (int oreId : OreDictionary.getOreIDs(stack)) {

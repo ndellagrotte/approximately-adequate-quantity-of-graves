@@ -72,11 +72,13 @@ public class ModConfigs {
     private static void handleSoulboundConfigs()
     {
         String deathList = Names.MODID + ":" + Names.DEATH_LIST;
-        SOULBOUND = config.get("soulbound", "soulbound", new String[] { deathList }, "Items that always stay in the player's " +
-                "inventory when they die, instead of going into the grave. One entry per line: either an item id " +
-                "(minecraft:diamond_sword) or an ore dictionary name with an 'ore:' prefix (ore:ingotIron). Invalid " +
+        SOULBOUND = config.get("soulbound", "soulbound", new String[] { deathList, "type:armor", "type:tool", "ore:torch" },
+                "Items that always stay in the player's inventory when they die, instead of going into the grave. " +
+                "One entry per line, each one of: a kind of item (type:armor = anything worn in an armor slot, " +
+                "type:tool = tools, weapons, bows, shields and the like; both cover modded items); an item id " +
+                "(minecraft:diamond_sword); or an ore dictionary name with an 'ore:' prefix (ore:ingotIron). Invalid " +
                 "entries are reported as an error in the log and ignored. Has no effect while the keepInventory " +
-                "gamerule is true. (Defaults to " + deathList + ".)").getStringList();
+                "gamerule is true. (Defaults to " + deathList + ", type:armor, type:tool, ore:torch.)").getStringList();
 
         SOULBOUND_DURABILITY_PENALTY = clampPercent(config.get("soulbound", "soulbound_durability_penalty", 10,
                 "The percentage of its MAXIMUM durability that each soulbound item with durability loses when its " +
@@ -93,7 +95,7 @@ public class ModConfigs {
 
     private static int clampPercent(int value)
     {
-        return Math.max(0, Math.min(100, value));
+        return Math.clamp(value, 0, 100);
     }
 
     private static void handleClientConfigs()
