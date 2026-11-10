@@ -47,15 +47,19 @@ public class CommonEvents {
 		InventoryHolder inventoryHolder = new InventoryHolder();
 		inventoryHolder.grabPlayerData(player);
 		if (inventoryHolder.isInventoryEmpty()) {
-			if (ModConfigs.ENABLE_CHAT_MESSAGE_ON_DEATH) {
-				ChatHelper.sayMessage(player, "But there were no valid items for the grave!");
-			}
-			if (ModConfigs.PRINT_DEATH_LOG) {
-				LogHelper.info(player.getName() + " died without valid items for a grave.");
-			}
+			announceNoGraveItems(player);
 			DeathInventoryHandler.clearLatest(player);
 		}else{
 			invs.put(player.getUniqueID(), inventoryHolder);
+		}
+	}
+
+	private void announceNoGraveItems(EntityPlayer player) {
+		if (ModConfigs.ENABLE_CHAT_MESSAGE_ON_DEATH) {
+			ChatHelper.sayMessage(player, "But there were no valid items for the grave!");
+		}
+		if (ModConfigs.PRINT_DEATH_LOG) {
+			LogHelper.info(player.getName() + " died without valid items for a grave.");
 		}
 	}
 
@@ -66,6 +70,8 @@ public class CommonEvents {
 		if (ModConfigs.PRINT_DEATH_LOG) {
 			handleDeathLog(player);
 		}
+		// the snapshot this death's list is made from; stays null when the death left nothing to list
+		InventoryHolder listed = null;
 		if (!player.world.getGameRules().getBoolean("keepInventory")) {
 			InventoryHolder inventoryHolder = invs.get(player.getUniqueID());
 			if(inventoryHolder != null){
@@ -73,22 +79,33 @@ public class CommonEvents {
 				SoulboundHandler.keepSoulboundItems(player, inventoryHolder, e.getDrops());
 				// takes the drops the snapshot accounts for out of the event, so they do not also fall on the ground
 				List<EntityItem> claimed = inventoryHolder.ensure(e.getDrops());
-				if (!inventoryHolder.isInventoryEmpty() && !handleGraveLogic(player)) {
-					// nothing took the items (graves disabled, or no spot for one): let them drop like a normal death
-					e.getDrops().addAll(claimed);
+				if (inventoryHolder.isInventoryEmpty()) {
+					// only known here: the snapshot taken at death still held the soulbound items and empty slots
+					announceNoGraveItems(player);
+				} else {
+					if (!handleGraveLogic(player)) {
+						// nothing took the items (graves disabled, or no spot for one): let them drop like a normal death
+						e.getDrops().addAll(claimed);
+					}
+					listed = inventoryHolder;
 				}
 			}
 		}
 
-		ItemStack newList = DeathInventoryHandler.getDeathListFromFile(player.getName(), "latest");
-		if (newList != null) {
+		if (listed != null && ModConfigs.ALLOW_INVENTORY_SAVES) {
+			// built from this death's snapshot rather than read back from the "latest" save file, which still
+			// holds an earlier death whenever this one wrote nothing
+			ItemStack newList = DeathInventoryHandler.createDeathList(listed);
 			InventoryPlayer inv = player.inventory;
 			for (int i = 0; i < inv.mainInventory.size(); i++) {
 				if (inv.mainInventory.get(i).isEmpty()) {
-					inv.mainInventory.set(i, newList.copy());
+					inv.mainInventory.set(i, newList);
 					break;
 				}
 			}
+		} else {
+			// no list for this death, so "latest" must not keep answering with the previous one
+			DeathInventoryHandler.clearLatest(player);
 		}
 
 		for (EntityItem entityItem : e.getDrops()) {

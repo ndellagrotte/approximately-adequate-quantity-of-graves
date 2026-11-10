@@ -144,6 +144,16 @@ public class DeathInventoryHandler {
         return saved;
     }
 
+    /**
+     * A death list for the death the holder was taken at. Carries the same data as that death's save file.
+     */
+    public static ItemStack createDeathList(InventoryHolder holder) {
+        ItemStack theList = new ItemStack(ModItems.itemDeathList, 1);
+        // copied, because the grave keeps using the holder's own compound
+        theList.setTagCompound(holder.writeToNBT(new NBTTagCompound()).copy());
+        return theList;
+    }
+
     public static ItemStack getDeathListFromFile(String playerName, String timestamp){
         String filename = FILE_PREFIX + "/" + playerName + "#" + timestamp + ".json";
 
