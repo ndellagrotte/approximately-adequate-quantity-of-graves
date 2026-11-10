@@ -49,6 +49,11 @@ public class ModConfigs {
     // Server related configs
     public static boolean PRINT_DEATH_LOG;
 
+    // Soulbound configs
+    public static String[] SOULBOUND;
+    public static int SOULBOUND_DURABILITY_PENALTY;
+    public static int SOULBOUND_EXP_PENALTY;
+
     public static void preInit(FMLPreInitializationEvent event)
     {
         config = new Configuration(event.getSuggestedConfigurationFile());
@@ -59,8 +64,36 @@ public class ModConfigs {
         handleCommonConfigs();
         handleInteractionConfigs();
         handleGravePlacementConfigs();
+        handleSoulboundConfigs();
 
         config.save();
+    }
+
+    private static void handleSoulboundConfigs()
+    {
+        String deathList = Names.MODID + ":" + Names.DEATH_LIST;
+        SOULBOUND = config.get("soulbound", "soulbound", new String[] { deathList }, "Items that always stay in the player's " +
+                "inventory when they die, instead of going into the grave. One entry per line: either an item id " +
+                "(minecraft:diamond_sword) or an ore dictionary name with an 'ore:' prefix (ore:ingotIron). Invalid " +
+                "entries are reported as an error in the log and ignored. Has no effect while the keepInventory " +
+                "gamerule is true. (Defaults to " + deathList + ".)").getStringList();
+
+        SOULBOUND_DURABILITY_PENALTY = clampPercent(config.get("soulbound", "soulbound_durability_penalty", 10,
+                "The percentage of its MAXIMUM durability that each soulbound item with durability loses when its " +
+                "owner dies. For example, 10 takes 156 durability off a diamond sword (max 1561) per death. The " +
+                "penalty never destroys an item: it stops at 1 durability left. 0 disables the penalty. Has no " +
+                "effect while the keepInventory gamerule is true. (Defaults to 10, range 0-100.)", 0, 100).getInt());
+
+        SOULBOUND_EXP_PENALTY = clampPercent(config.get("soulbound", "soulbound_exp_penalty", 20, "The percentage " +
+                "of their experience levels a player loses when they die. The rest is kept through death and no " +
+                "experience orbs are dropped. This applies to every death, whether or not the player has soulbound " +
+                "items. 100 gives vanilla behaviour (all experience lost, some of it dropped as orbs). Has no " +
+                "effect while the keepInventory gamerule is true. (Defaults to 20, range 0-100.)", 0, 100).getInt());
+    }
+
+    private static int clampPercent(int value)
+    {
+        return Math.max(0, Math.min(100, value));
     }
 
     private static void handleClientConfigs()

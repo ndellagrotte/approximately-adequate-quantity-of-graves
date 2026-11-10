@@ -8,12 +8,14 @@ import com.ndellagrotte.aaqg.api.IGraveInventory;
 import com.ndellagrotte.aaqg.commands.ModCommands;
 import com.ndellagrotte.aaqg.invman.GraveInventoryManager;
 import com.ndellagrotte.aaqg.proxy.CommonProxy;
+import com.ndellagrotte.aaqg.soulbound.SoulboundList;
 
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.discovery.ASMDataTable.ASMData;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
@@ -61,6 +63,12 @@ public class AAQG {
 
 		// Make sure to finalize the listeners so the mod actually works...
 		GraveInventoryManager.getInstance().finalizeListeners();
+	}
+
+	@Mod.EventHandler
+	public void loadComplete(FMLLoadCompleteEvent e) {
+		// Every mod has registered its items and ore dictionary names by now, so the soulbound list can be checked.
+		SoulboundList.resolve(ModConfigs.SOULBOUND);
 	}
 
 	@Mod.EventHandler

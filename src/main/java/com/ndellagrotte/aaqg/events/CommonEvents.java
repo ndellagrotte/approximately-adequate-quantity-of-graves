@@ -10,6 +10,7 @@ import com.ndellagrotte.aaqg.blocks.ModBlocks;
 import com.ndellagrotte.aaqg.invman.DeathInventoryHandler;
 import com.ndellagrotte.aaqg.invman.InventoryHolder;
 import com.ndellagrotte.aaqg.items.ModItems;
+import com.ndellagrotte.aaqg.soulbound.SoulboundHandler;
 import com.ndellagrotte.aaqg.tiles.TileGrave;
 import com.ndellagrotte.aaqg.util.ChatHelper;
 import com.ndellagrotte.aaqg.util.LogHelper;
@@ -30,6 +31,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.IPlantable;
 import net.minecraftforge.event.entity.item.ItemTossEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingExperienceDropEvent;
 import net.minecraftforge.event.entity.player.PlayerDropsEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.fml.common.eventhandler.EventPriority;
@@ -70,6 +72,8 @@ public class CommonEvents {
 		if (!player.world.getGameRules().getBoolean("keepInventory")) {
 			InventoryHolder inventoryHolder = invs.get(player.getUniqueID());
 			if(inventoryHolder != null){
+				// soulbound items come out of the drops first, so they never reach the grave
+				SoulboundHandler.keepSoulboundItems(player, inventoryHolder, e.getDrops());
 				inventoryHolder.ensure(e.getDrops());
 				if(!inventoryHolder.isInventoryEmpty())handleGraveLogic(player);
 				List<EntityItem> removals = new ArrayList<EntityItem>();
@@ -312,6 +316,25 @@ public class CommonEvents {
 					}
 				}
 			}
+		}
+	}
+
+	// LOWEST so this runs after the death list has been handed over above, and after other mods (Baubles) have
+	// copied their own inventories to the new player, which would otherwise overwrite what is restored here.
+	@SubscribeEvent(priority = EventPriority.LOWEST)
+	public void onPlayerCloneSoulbound(PlayerEvent.Clone event) {
+		if (event.getEntityPlayer().world.isRemote) return;
+		SoulboundHandler.restoreSoulboundItems(event.getEntityPlayer());
+		if (event.isWasDeath()) {
+			SoulboundHandler.applyExpPenalty(event.getOriginal(), event.getEntityPlayer());
+		}
+	}
+
+	// The player keeps their share of experience on respawn, so it must not also drop as orbs.
+	@SubscribeEvent
+	public void onPlayerExperienceDrop(LivingExperienceDropEvent event) {
+		if (event.getEntityLiving() instanceof EntityPlayer && SoulboundHandler.isExpPenaltyActive((EntityPlayer) event.getEntityLiving())) {
+			event.setCanceled(true);
 		}
 	}
 

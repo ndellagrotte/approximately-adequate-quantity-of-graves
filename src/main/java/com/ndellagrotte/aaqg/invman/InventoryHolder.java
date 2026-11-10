@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import com.ndellagrotte.aaqg.api.TempInventory;
 import com.ndellagrotte.aaqg.items.ItemDeathList;
@@ -93,6 +95,52 @@ public class InventoryHolder {
     		compound.setTag(key, list);
     	}
     	isEmpty = getAllItems().isEmpty();
+    }
+
+    /**
+     * Moves every stack that matches and is actually among the drops out of this holder and out of the drops.
+     *
+     * @param onExtract called with each extracted stack before it is stored, so it can be modified
+     * @return the extracted stacks in the same layout this holder uses: one slot-indexed tag list per inventory id.
+     *         Empty if nothing matched.
+     */
+    public NBTTagCompound extractMatching(Predicate<ItemStack> matcher, List<EntityItem> drops, Consumer<ItemStack> onExtract) {
+        NBTTagCompound extracted = new NBTTagCompound();
+        for (String key : new ArrayList<>(compound.getKeySet())) {
+            // the compound also holds plain values (player name, timestamp, position); only tag lists are inventories
+            if (!compound.hasKey(key, 9)) {
+                continue;
+            }
+            TempInventory inv = new TempInventory(compound.getTagList(key, 10));
+            TempInventory extractedInv = new TempInventory(inv.getSizeInventory());
+            boolean extractedAny = false;
+            for (int i = 0; i < inv.getSizeInventory(); i++) {
+                ItemStack stack = inv.getStackInSlot(i);
+                if (stack.isEmpty() || !matcher.test(stack)) {
+                    continue;
+                }
+                EntityItem drop = null;
+                for (EntityItem itm : drops) {
+                    if (ItemStack.areItemStacksEqual(stack, itm.getItem())) {
+                        drop = itm;
+                        break;
+                    }
+                }
+                if (drop == null) {
+                    continue;
+                }
+                drops.remove(drop);
+                inv.setInventorySlotContents(i, ItemStack.EMPTY);
+                onExtract.accept(stack);
+                extractedInv.setInventorySlotContents(i, stack);
+                extractedAny = true;
+            }
+            if (extractedAny) {
+                compound.setTag(key, inv.writeToTagList(new NBTTagList()));
+                extracted.setTag(key, extractedInv.writeToTagList(new NBTTagList()));
+            }
+        }
+        return extracted;
     }
 
     public void grabPlayerData(EntityPlayer player, BlockPos pos) {

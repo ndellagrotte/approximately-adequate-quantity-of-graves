@@ -13,6 +13,8 @@ to the CleanroomMC mod template, with a new mod id (`aaqg`). Licensed under GPLv
 - Per-grave lock and force/yield mode (right click and sneak-right-click the grave).
 - Friends list so trusted players can open your graves.
 - Death lists: an item showing what was in the grave, with a particle trail leading to it.
+- Soulbound items: a configurable list of items that stay on you through death instead of going into the grave,
+  with optional durability and experience penalties.
 - Inventory backups as JSON files under `./aaqg/savedInventories/` for admin restore.
 - Optional support for Baubles, Cosmetic Armor Reworked, Techguns, Galacticraft and Backpacks (Eydamos)
   inventories. Other mods can add their own through the `@GraveRegistry` / `IGraveInventory` API.
@@ -31,6 +33,33 @@ to the CleanroomMC mod template, with a new mod id (`aaqg`). Licensed under GPLv
 | `/aaqg_drop <player> <timestamp> [receiver]` | 2 | Drop a backup's items |
 
 Configuration lives in `config/aaqg.cfg`.
+
+## Soulbound items
+
+The `soulbound` category of the config controls what a player keeps on death. None of it applies while the
+`keepInventory` gamerule is `true`.
+
+| Option | Default | Purpose |
+|---|---|---|
+| `soulbound` | `aaqg:death_list` | Items that stay in the player's inventory on death, in their original slots |
+| `soulbound_durability_penalty` | `10` | Percent of its maximum durability each soulbound item loses per death. Never breaks the item: it stops at 1 durability |
+| `soulbound_exp_penalty` | `20` | Percent of experience levels lost on every death. The rest is kept and no orbs drop. `100` is vanilla behaviour |
+
+Each `soulbound` entry is an item id, or an ore dictionary name with an `ore:` prefix (Minecraft 1.12 has no item
+tags, so the ore dictionary fills that role):
+
+```
+soulbound {
+    S:soulbound <
+        aaqg:death_list
+        minecraft:diamond_sword
+        minecraft:elytra
+        ore:ingotIron
+     >
+}
+```
+
+Entries that match no item or ore dictionary name are listed in an error in the log at startup and ignored.
 
 ## Building
 
